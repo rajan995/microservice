@@ -1,0 +1,145 @@
+
+services:
+  # auth:
+  #   container_name: auth-service
+  #   build:
+  #     context: ./api-server/auth
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3001:3001"
+  #   env_file: ./api-server/auth/.env
+  #   networks:
+  #     - salon-network
+  # productOrder:
+  #   container_name: product-order-service
+  #   build:
+  #     context: ./api-server/productOrder
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3002:3002"
+  #   env_file: ./api-server/productOrder/.env
+  #   networks:
+  #     - salon-network
+  # products:
+  #   container_name: product-service
+  #   build:
+  #     context: ./api-server/products
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3003:3003"
+  #   env_file: ./api-server/products/.env
+  #   networks:
+  #     - salon-network
+    # utility:
+  #   container_name: product-utility
+  #   build:
+  #     context: ./api-server/utility
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3004:3004"
+  #   env_file: ./api-server/utility/.env
+  #   networks:
+  #     - salon-network
+  mongodb-auth:
+    image: mongo:latest
+    container_name: mongodb-auth
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data_auth:/data/db
+    networks: 
+      - salon-network
+  mongodb-order:
+    image: mongo:latest
+    container_name: mongodb-order
+    ports:
+      - "27019:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data_order:/data/db
+    networks: 
+      - salon-network
+  mongodb-product:
+    image: mongo:latest
+    container_name: mongodb-product
+    ports:
+      - "27020:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data_product:/data/db
+    networks: 
+      - salon-network
+  mongodb-utility:
+    image: mongo:latest
+    container_name: mongodb-utility
+    ports:
+      - "27021:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data_utility:/data/db
+    networks: 
+      - salon-network
+
+
+  # Zookeeper (required by Kafka)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - salon-network
+
+  # # Kafka Service
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      
+    depends_on:
+      - zookeeper
+    networks:
+      - salon-network
+
+  # Redis Service
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - salon-network
+
+volumes:
+  mongodb_data_product:
+  mongodb_data_order:
+  mongodb_data_auth:
+  mongodb_data_utility:
+  redis_data:
+  kafka_data:
+networks:
+  salon-network:
+    driver: bridge
